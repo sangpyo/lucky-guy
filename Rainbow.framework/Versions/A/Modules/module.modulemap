@@ -1,0 +1,11 @@
+framework module Rainbow {
+  umbrella header "Rainbow.h"
+
+  export *
+  module * { export * }
+}
+
+module Rainbow.Swift {
+    header "Rainbow-Swift.h"
+    requires objc
+}

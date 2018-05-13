@@ -1,0 +1,1 @@
+swift -F ./ LuckyGuy.swift
