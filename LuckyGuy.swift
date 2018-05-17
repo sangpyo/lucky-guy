@@ -4,7 +4,7 @@ import Foundation
 import RandomKit
 import Rainbow
 
-let dataFilePath = "/Users/name/Documents/lotto1-806.json"
+let dataFilePath = "./lotto1-806.json"
 
 struct LottoCollection: Codable {
     var lottos: [Lotto]
@@ -16,7 +16,7 @@ struct Lotto: Codable {
     var bonus: Int
 }
 
-typealias WinNumber = (number: [Int], bonus: Int)
+typealias LuckyNumber = [Int]
 
 var randomGenerator = Xoroshiro.default
 let range = 1...45
@@ -34,13 +34,13 @@ func printInfo(_ string: String) {
     print("[Info]".green + " \(string)")
 }
 
-func printWinBlink(_ string: String) {
-    print("[Win]".green.blink.bold + " \(string)")
+func printLuckyBlink(_ string: String) {
+    print("[Lucky]".green.blink.bold + " \(string)")
 }
 
 
-var winNumber: WinNumber? {
-    var random = [Int]()
+var luckyNumber: LuckyNumber? {
+    var random = LuckyNumber()
 
     for _ in count {
         let number = Int.random(in: range, using: &randomGenerator)
@@ -50,15 +50,9 @@ var winNumber: WinNumber? {
         }
         random.append(number)
     }
-    let bonus = Int.random(in: range, using: &randomGenerator)
     random.sort()
     
-    if random.contains(bonus) {
-        //printError("\(random) contains \(bonus)")
-        return nil
-    }
-    
-    return WinNumber(number: random, bonus: bonus)
+    return random
 }
 
 func loadData() -> LottoCollection? {
@@ -77,42 +71,96 @@ func loadData() -> LottoCollection? {
 }
 
 
-    
-func popEye(lotto: Lotto) {
 
-    var repeatCount = 0
-    var errorCount = 0
-    var winCount = 0
-    while true {
-        guard let winNumber = winNumber else {
-            errorCount += 1
-            continue
+func maekLuckyNumber(luckyCount: [Int])  {
+    func luckyNumberAt(at: Int) -> LuckyNumber {
+        var retryCount = 0
+        while true {
+            
+            guard let luckyNumber = luckyNumber else {
+                continue
+            }
+            retryCount += 1
+            
+            if retryCount == at {
+                return luckyNumber
+                //break
+            }
         }
-        repeatCount += 1
-        
-        if lotto.number == winNumber.number {
-            winCount += 1
-            printWinBlink("(\(winCount)) (\(repeatCount)) Matched Item: \(lotto)")
-            break
-        }
-        
-//        if 0 == repeatCount % 1000000 {
-//            printInfo("repeat count: \(repeatCount)")
-//            printInfo("error count: \(errorCount)")
-//        }
     }
+    
+    
+    for at in luckyCount {
+        let number = luckyNumberAt(at: at)
+        printLuckyBlink("\(at), Lucky Number: \(number)")
+    }
+    
 }
 
-func main() throws {
+
+
+func testLuckyMain(targetIndex: Int = -1, count: Int = 100) throws {
+    
+    func matchedLucky(index: Int, lotto: Lotto) -> Int {
+        var retryCount = 0
+        while true {
+            retryCount += 1
+            
+            guard let luckyNumber = luckyNumber else {
+                continue
+            }
+            
+            if lotto.number == luckyNumber {
+                printLuckyBlink("\(index), \(retryCount), Matched Item: \(lotto)")
+                break
+            }
+        }
+        return retryCount
+    }
+    
     guard let lottoCollection = loadData() else {
         return
     }
     
-    for lotto in lottoCollection.lottos {
-        popEye(lotto: lotto)
+    var selectedLotto: Lotto
+    if  lottoCollection.lottos.startIndex <= targetIndex &&
+        targetIndex < lottoCollection.lottos.endIndex  {
+        selectedLotto = lottoCollection.lottos[targetIndex]
+    } else {
+        selectedLotto = lottoCollection.lottos.first!
     }
+
+    var total = 0
+    for index in 1...count {
+        total += matchedLucky(index: index, lotto: selectedLotto)
+    }
+    
+    let everage = total / count
+    printInfo("평균값: \(everage)")
 }
 
-try main()
+func makeLuckyCount(seed: Int = 1) -> [Int] {
+    var random = [Int]()
+    let range = 761...8_493_578//70_066_516
+    let count = 1...5
+    
+    for _ in count {
+        let number = Int.random(in: range, using: &randomGenerator)
+        random.append(number)
+    }
+    
+    return random
+}
 
+
+//try testLuckyMain()
+//let luckyCount = [
+//    761,
+//    8_356_060,
+//    5_676_684,
+//    6_225_507,
+//    8_493_578]
+let luckyCount = makeLuckyCount(seed: 1)
+print("\(luckyCount)")
+maekLuckyNumber(luckyCount: luckyCount)
 
